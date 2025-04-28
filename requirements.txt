@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+spectral
+scikit-learn
+tensorflow
+absl-py
+joblib
+python-multipart
