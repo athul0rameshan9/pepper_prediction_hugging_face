@@ -1,16 +1,13 @@
 # main.py
-import logging
 import tempfile
 import shutil
+import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import predict_moisture  # Import your model function here
 
 import uvicorn
-
-# Setup logging
-logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
 
@@ -23,47 +20,54 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Path to save the uploaded files
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 @app.post("/api/predict")
 async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(...)):
     try:
-        logging.debug(f"Received files: {imgFile.filename}, {hdrFile.filename}")
+        # Print received files info
+        print(f"Received files: {imgFile.filename}, {hdrFile.filename}")
 
         # Check file types
         if not imgFile.filename.endswith('.img') or not hdrFile.filename.endswith('.hdr'):
             raise HTTPException(status_code=400, detail="Invalid file types. Upload .img and .hdr files.")
 
-        # Create temporary files for img and hdr with delete=True (automatic cleanup)
-        with tempfile.NamedTemporaryFile(delete=True) as img_temp, tempfile.NamedTemporaryFile(delete=True) as hdr_temp:
-            img_path = img_temp.name
-            hdr_path = hdr_temp.name
+        # Save the uploaded files to the server
+        img_path = os.path.join(UPLOAD_DIR, imgFile.filename)
+        hdr_path = os.path.join(UPLOAD_DIR, hdrFile.filename)
 
-            logging.debug(f"Temporary files created: {img_path}, {hdr_path}")
+        print(f"Saving files to: {img_path}, {hdr_path}")
 
-            # Save img and hdr to temporary files
-            with open(img_path, "wb") as f:
-                shutil.copyfileobj(imgFile.file, f)
-            with open(hdr_path, "wb") as f:
-                shutil.copyfileobj(hdrFile.file, f)
+        with open(img_path, "wb") as f:
+            shutil.copyfileobj(imgFile.file, f)
+        with open(hdr_path, "wb") as f:
+            shutil.copyfileobj(hdrFile.file, f)
 
-            logging.debug(f"Files saved: {img_path}, {hdr_path}")
+        print(f"Files saved: {img_path}, {hdr_path}")
 
-            # Call your prediction function
-            result = predict_moisture(img_path, hdr_path)
-            logging.debug(f"Prediction result: {result}")
+        # Call your prediction function and pass the file paths
+        result = predict_moisture(img_path, hdr_path)
+        print(f"Prediction result: {result}")
 
-            # Check prediction result
-            if "error" in result:
-                logging.error(f"Prediction error: {result['error']}")
-                return JSONResponse(status_code=500, content={"error": result["error"]})
+        # Clean up the uploaded files after prediction
+        os.remove(img_path)
+        os.remove(hdr_path)
 
-            # Return prediction results
-            return {
-                "moisture": result.get("moisture_prediction"),
-                "piperine": result.get("piperine_prediction")
-            }
+        # Check prediction result
+        if "error" in result:
+            print(f"Prediction error: {result['error']}")
+            return JSONResponse(status_code=500, content={"error": result["error"]})
+
+        # Return prediction results
+        return {
+            "moisture": result.get("moisture_prediction"),
+            "piperine": result.get("piperine_prediction")
+        }
 
     except Exception as e:
-        logging.error(f"An error occurred during prediction: {str(e)}")
+        print(f"An error occurred during prediction: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"An error occurred during prediction: {str(e)}"}
