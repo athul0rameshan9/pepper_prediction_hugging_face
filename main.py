@@ -24,6 +24,12 @@ app.add_middleware(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+if not os.access(UPLOAD_DIR, os.W_OK):
+    print(f"Error: Cannot write to {UPLOAD_DIR}. Check permissions.")
+else:
+    print(f"{UPLOAD_DIR} is writable.")
+
+
 @app.post("/api/predict")
 async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(...)):
     try:
