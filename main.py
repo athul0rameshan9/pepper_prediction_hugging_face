@@ -1,11 +1,11 @@
 # main.py
-
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
 import shutil
-from model import predict_moisture  # <--- Import your model function here
+import tempfile
+from model import predict_moisture  # Import your model function here
 
 import uvicorn
 
@@ -20,9 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 @app.post("/api/predict")
 async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(...)):
     try:
@@ -30,33 +27,34 @@ async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(..
         if not imgFile.filename.endswith('.img') or not hdrFile.filename.endswith('.hdr'):
             raise HTTPException(status_code=400, detail="Invalid file types. Upload .img and .hdr files.")
 
-        # Save uploaded files temporarily
-        img_path = os.path.join(UPLOAD_DIR, imgFile.filename)
-        hdr_path = os.path.join(UPLOAD_DIR, hdrFile.filename)
+        # Create temporary files for img and hdr
+        with tempfile.NamedTemporaryFile(delete=False) as img_temp, tempfile.NamedTemporaryFile(delete=False) as hdr_temp:
+            img_path = img_temp.name
+            hdr_path = hdr_temp.name
 
-        print(img_path,hdr_path)
+            # Save img and hdr to temporary files
+            with open(img_path, "wb") as f:
+                shutil.copyfileobj(imgFile.file, f)
 
-        with open(img_path, "wb") as f:
-            shutil.copyfileobj(imgFile.file, f)
+            with open(hdr_path, "wb") as f:
+                shutil.copyfileobj(hdrFile.file, f)
 
-        with open(hdr_path, "wb") as f:
-            shutil.copyfileobj(hdrFile.file, f)
+            # Call your prediction function
+            result = predict_moisture(img_path, hdr_path)
 
-        # Call prediction
-        result = predict_moisture(img_path, hdr_path)
-        print(result)
-        # Clean up uploaded files
-        os.remove(img_path)
-        os.remove(hdr_path)
+            # Clean up the temporary files
+            os.remove(img_path)
+            os.remove(hdr_path)
 
-        # Check prediction result
-        if "error" in result:
-            return JSONResponse(status_code=500, content={"error": result["error"]})
+            # Check prediction result
+            if "error" in result:
+                return JSONResponse(status_code=500, content={"error": result["error"]})
 
-        return {
-            "moisture": result["moisture_prediction"],
-            "piperine": result["piperine_prediction"]
-        }
+            # Return prediction results
+            return {
+                "moisture": result.get("moisture_prediction"),
+                "piperine": result.get("piperine_prediction")
+            }
 
     except Exception as e:
         return JSONResponse(
@@ -66,3 +64,4 @@ async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(..
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7860)
+
