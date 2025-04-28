@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Path to save the uploaded files
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = "/tmp"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 if not os.access(UPLOAD_DIR, os.W_OK):
