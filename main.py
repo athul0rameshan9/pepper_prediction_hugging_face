@@ -32,8 +32,8 @@ async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(..
         if not imgFile.filename.endswith('.img') or not hdrFile.filename.endswith('.hdr'):
             raise HTTPException(status_code=400, detail="Invalid file types. Upload .img and .hdr files.")
 
-        # Create temporary files for img and hdr
-        with tempfile.NamedTemporaryFile(delete=False) as img_temp, tempfile.NamedTemporaryFile(delete=False) as hdr_temp:
+        # Create temporary files for img and hdr with delete=True (automatic cleanup)
+        with tempfile.NamedTemporaryFile(delete=True) as img_temp, tempfile.NamedTemporaryFile(delete=True) as hdr_temp:
             img_path = img_temp.name
             hdr_path = hdr_temp.name
 
@@ -50,10 +50,6 @@ async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(..
             # Call your prediction function
             result = predict_moisture(img_path, hdr_path)
             logging.debug(f"Prediction result: {result}")
-
-            # Clean up the temporary files
-            os.remove(img_path)
-            os.remove(hdr_path)
 
             # Check prediction result
             if "error" in result:
