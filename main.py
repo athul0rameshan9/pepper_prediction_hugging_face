@@ -44,7 +44,7 @@ async def predict(imgFile: UploadFile = File(...), hdrFile: UploadFile = File(..
 
         # Call prediction
         result = predict_moisture(img_path, hdr_path)
-
+        print(result)
         # Clean up uploaded files
         os.remove(img_path)
         os.remove(hdr_path)
