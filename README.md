@@ -1,4 +1,4 @@
-# 🌶️ Pepper Quality Prediction
+#Pepper Quality Prediction
 
 This project predicts **piperine** and **moisture content** in pepper samples using **hyperspectral images**.
 
