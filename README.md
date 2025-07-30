@@ -10,8 +10,8 @@ It has two parts:
 
 ## 🔗 Live Links
 
-- 🚀 **Frontend (Vercel)**: [https://pepper-predictor.vercel.app](https://pepper-predictor.vercel.app)
-- 🧠 **Backend API (Hugging Face)**: [https://huggingface.co/spaces/athul0rameshan9/pepper_predictor](https://huggingface.co/spaces/athul0rameshan9/pepper_predictor)
+- 🚀 **Frontend (Vercel)**: [https://pepper-predictor.vercel.app](https://hyperspectral-website-1714ugpow-athul0rameshan9s-projects.vercel.app/)
+- 🧠 **Backend API (Hugging Face)**: [https://huggingface.co/spaces/athul0rameshan9/pepper_predictor](https://huggingface.co/spaces/athu98/pepper-prediction)
 
 ---
 
