@@ -1,4 +1,4 @@
-# 🌶️ Pepper Quality Prediction API
+#Pepper Quality Prediction API
 
 This project predicts **piperine** and **moisture content** in pepper samples using **hyperspectral images**.
 
@@ -51,3 +51,8 @@ files = {'file': open('sample.png', 'rb')}
 res = requests.post(url, files=files)
 print(res.json())
 '''
+### Response
+{
+  "piperine_content": 4.21,
+  "moisture_content": 13.35
+}
